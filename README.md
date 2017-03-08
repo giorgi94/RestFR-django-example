@@ -1,0 +1,1 @@
+# RestFR-django-example
