@@ -9,5 +9,7 @@ urlpatterns = [
 	url(r'^(?P<pk>\d+)/$', views.UserDetailApiView.as_view(), name='detail'),
 	url(r'^(?P<pk>\d+)/edit/$', views.UserUpadteApiView.as_view(), name='edit'),
 	url(r'^(?P<pk>\d+)/delete/$', views.UserDeleteApiView.as_view(), name='delete'),
+
+	url(r'^login/$', views.UserLoginApiView.as_view(), name='login'),
 	
 ]

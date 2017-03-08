@@ -9,5 +9,8 @@ urlpatterns = [
 	url(r'^(?P<pk>\d+)/$', views.PostDetailApiView.as_view(), name='detail'),
 	url(r'^(?P<pk>\d+)/edit/$', views.PostUpadteApiView.as_view(), name='edit'),
 	url(r'^(?P<pk>\d+)/delete/$', views.PostDeleteApiView.as_view(), name='delete'),
+
+	url(r'^(?P<pk>\d+)/addcomment/$', views.CommentCreateApiView.as_view(), name='addcomment'),
+
 	
 ]

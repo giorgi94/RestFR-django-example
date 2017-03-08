@@ -3,6 +3,14 @@ from django.utils import timezone
 from user.models import User
 from post.models import Post
 
+from rest_framework.permissions import (
+		AllowAny,
+		IsAuthenticated,
+		IsAdminUser,
+		IsAuthenticatedOrReadOnly,
+	)
+from post.api.permissions import IsOwnerOrReadOnly
+
 from datetime import datetime
 
 from django.shortcuts import redirect, reverse
@@ -22,6 +30,7 @@ user_delete_url = serializers.HyperlinkedIdentityField(
 				view_name='api-user:delete',
 				lookup_field='pk'
 			)
+
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -82,9 +91,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
 				'posts',
 			]
 
-
-
-
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = User
@@ -119,3 +125,16 @@ class PostSerializer(serializers.ModelSerializer):
 			]
 
 
+class UserLoginSerializer(serializers.ModelSerializer):
+	email = serializers.EmailField(label='E-Mail')
+	password = serializers.CharField(
+							label='Password',
+    							style={'input_type': 'password'}
+						)
+
+	class Meta:
+		model = Post
+		fields = [
+				'email',
+				'password',
+			]
