@@ -1,23 +1,13 @@
 from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.permissions import (
-		AllowAny,
-		IsAuthenticated,
-		IsAdminUser,
-		IsAuthenticatedOrReadOnly,
-	)
-from .permissions import IsOwnerOrReadOnly
+from rest_framework import permissions
+from rest_framework import mixins
 
-# from django.views.decorators.csrf import csrf_exempt
-
-from django.shortcuts import (
-	redirect, 
-	reverse, 
-	get_object_or_404)
-
-from post.models import Post
-
+from django.shortcuts import redirect, reverse, get_object_or_404
+from post.models import Post, Comment
 from . import serializer, pagination
+
+from user.models import User
 
 
 class PostListAPIView(generics.ListAPIView):
@@ -26,69 +16,42 @@ class PostListAPIView(generics.ListAPIView):
 
 	pagination_class = pagination.CustomPagination
 
+class PostCreateApiView(generics.CreateAPIView):
+	model = Post
+	serializer_class = serializer.PostCreateSerializer
+	# permission_classes = [IsAuthenticated]
 
-class PostDetailApiView(generics.RetrieveAPIView):
-	queryset = Post.objects.all()
+
+	def perform_create(self, serializer):
+		serializer.save(user=self.request.user)
+
+class PostDetailApiView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.RetrieveAPIView):
+	model = Post
 	serializer_class = serializer.PostDetailSerializer
 
+	def get_object(self):
+		obj = get_object_or_404(self.model, pk=self.kwargs['pk'])
+		return obj
 
-class PostUpadteApiView(generics.UpdateAPIView):
-	queryset = Post.objects.all()
-	serializer_class = serializer.PostSerializer
+	def put(self, request, *args, **kwargs):
+		return self.update(request, *args, **kwargs)
 
-	permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-	def get(self, request, *args, **kwargs):
-		object = self.queryset.get(pk=kwargs['pk'])
-		serializer = self.serializer_class(object)
-		
-		return Response(serializer.data)
-
-		
+	def delete(self, request, *args, **kwargs):
+		return self.destroy(request, *args, **kwargs)
 
 
-class PostDeleteApiView(generics.DestroyAPIView):
-	queryset = Post.objects.all()
-	serializer_class = serializer.PostSerializer
+class CommentListApiView(mixins.CreateModelMixin, generics.ListAPIView):
+	model = Comment
+	serializer_class = serializer.CommentDetailSerializer
+	# permission_classes = [IsAuthenticated]
 
-	permission_classes = [IsOwnerOrReadOnly]
+	def get_queryset(self):
+		post = Post.objects.get(pk=self.kwargs['pk'])
+		return post.comment_set
 
-	def get(self, request, *args, **kwargs):
-		object = self.queryset.get(pk=kwargs['pk'])
-		serializer = self.serializer_class(object)
-		return Response(serializer.data)
-
-
-class PostCreateApiView(generics.CreateAPIView):
-	queryset = Post.objects.all()
-	serializer_class = serializer.PostCreateSerializer
-	permission_classes = [IsAuthenticated]
-
+	def perform_create(self, serializer):
+		post = Post.objects.get(pk=self.kwargs['pk'])
+		serializer.save(user=self.request.user, post=post)
 
 	def post(self, request, *args, **kwargs):
-
-		post = Post()
-		post.user = request.user
-		post.title = request.POST.get('title')
-		post.text = request.POST.get('text')
-		post.save()
-
-		return redirect(reverse('api-post:detail', kwargs={'pk' : post.pk}))
-
-class CommentCreateApiView(generics.CreateAPIView):
-	queryset = Post.objects.all()
-	serializer_class = serializer.CommentCreateSerializer
-	permission_classes = [IsAuthenticated]
-
-	def get(self, request, *args, **kwargs):
-		object = self.queryset.get(pk=kwargs['pk'])
-		serializer_local = serializer.PostdetailSerializer(object)
-		return Response(serializer_local.data)
-
-	def post(self, request, *args, **kwargs):
-		object = self.queryset.get(pk=kwargs['pk'])
-		object.comment_set.create(
-				text=request.POST.get('text'),
-				user=request.user
-			)
-		return redirect(reverse('api-post:addcomment', kwargs={'pk' : kwargs['pk']}))
+		return self.create(request, *args, **kwargs)
