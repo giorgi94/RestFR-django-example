@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.utils import timezone
-from django.shortcuts import redirect
+from django.shortcuts import redirect, reverse
 
 from rest_framework import serializers
 from post.models import Post, Comment
@@ -75,7 +75,11 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
 
 class CommentListSerializer(serializers.ModelSerializer):
+	url = serializers.SerializerMethodField()
 	user = serializers.SerializerMethodField()
+
+	def get_url(self, obj):
+		return reverse('api-post:comment', kwargs={'pk': obj.pk})
 
 	def get_user(self, obj):
 		return obj.user.email
@@ -83,14 +87,17 @@ class CommentListSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Comment
 		fields = [
+				'url',
 				'user',
 				'text',
 			]
 		read_only_fields = [
+				'url'
 				'user',
 			]
 
 class CommentDetailSerializer(serializers.ModelSerializer):
+
 	user = serializers.SerializerMethodField()
 
 	created = serializers.SerializerMethodField()

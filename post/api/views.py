@@ -6,6 +6,7 @@ from rest_framework import mixins
 from django.shortcuts import redirect, reverse, get_object_or_404
 from post.models import Post, Comment
 from . import serializer, pagination
+from .permissions import *
 
 from user.models import User
 
@@ -19,7 +20,7 @@ class PostListAPIView(generics.ListAPIView):
 class PostCreateApiView(generics.CreateAPIView):
 	model = Post
 	serializer_class = serializer.PostCreateSerializer
-	# permission_classes = [IsAuthenticated]
+	permission_classes = [permissions.IsAuthenticated]
 
 
 	def perform_create(self, serializer):
@@ -28,6 +29,8 @@ class PostCreateApiView(generics.CreateAPIView):
 class PostDetailApiView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.RetrieveAPIView):
 	model = Post
 	serializer_class = serializer.PostDetailSerializer
+
+	permission_classes = [IsOwnerOrReadOnly]
 
 	def get_object(self):
 		obj = get_object_or_404(self.model, pk=self.kwargs['pk'])
@@ -43,7 +46,7 @@ class PostDetailApiView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, gener
 class CommentListApiView(mixins.CreateModelMixin, generics.ListAPIView):
 	model = Comment
 	serializer_class = serializer.CommentDetailSerializer
-	# permission_classes = [IsAuthenticated]
+	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 	def get_queryset(self):
 		post = Post.objects.get(pk=self.kwargs['pk'])
@@ -55,3 +58,20 @@ class CommentListApiView(mixins.CreateModelMixin, generics.ListAPIView):
 
 	def post(self, request, *args, **kwargs):
 		return self.create(request, *args, **kwargs)
+
+class CommentDetailApiView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.RetrieveAPIView):
+	model = Comment
+	serializer_class = serializer.CommentDetailSerializer
+
+	permission_classes = [IsOwnerOrReadOnly]
+	
+
+	def get_object(self):
+		obj = get_object_or_404(self.model, pk=self.kwargs['pk'])
+		return obj
+
+	def put(self, request, *args, **kwargs):
+		return self.update(request, *args, **kwargs)
+
+	def delete(self, request, *args, **kwargs):
+		return self.destroy(request, *args, **kwargs)
