@@ -1,5 +1,5 @@
 # RestFR-django-example
----
+
 This is a simple django project using REST framework.
 
 By python module "requests" can be sent json data, for example:
