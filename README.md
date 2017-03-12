@@ -8,4 +8,4 @@ By python module "requests" can be sent json data, for example:
     auth=(email, password)
     data = {'text':'my comment'}
     link = 'http://localhost:8000/api/post/2/comment/'
-    requests.post(link,auth=auth, json=data)
+    requests.post(link, auth=auth, json=data)
